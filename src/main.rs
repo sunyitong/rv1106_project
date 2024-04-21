@@ -1,8 +1,7 @@
-mod display;
-mod font_pixel_operator_16;
-mod font_dot_digital_20;
+mod user_interface;
+mod core;
 
-use display::*;
+use user_interface::display::display::*;
 use rand::Rng;
 
 fn main() {

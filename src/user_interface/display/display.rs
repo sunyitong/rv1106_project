@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 use std::thread;
-use crate::font_pixel_operator_16;
-use crate::font_dot_digital_20;
+use crate::user_interface::display::font::{font_pixel_operator_16, font_dot_digital_20};
 use image::GenericImageView;
 use image::io::Reader as ImageReader;
 
