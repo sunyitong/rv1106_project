@@ -1,5 +1,3 @@
-use std::thread;
-use std::time::{Instant, Duration};
 use crate::core::track_loader::*;
 use crate::core::data_loader_container::*;
 use crate::core::wave_container::*;
@@ -11,6 +9,7 @@ pub struct Core {
     data_loader_container: DataLoaderContainer,
     wave_container: WaveContainer,
     operator_rack: OperatorRack,
+    data_output: DataOutput,
 }
 
 impl Core {
@@ -20,6 +19,7 @@ impl Core {
             data_loader_container: DataLoaderContainer::new(track_number),
             wave_container: WaveContainer::new(track_number),
             operator_rack: OperatorRack::new(),
+            data_output: DataOutput::new(),
         }
     }
 

@@ -25,7 +25,7 @@ impl DataLoaderContainer {
         *loader = match loader_type {
             "file_loader" => TrackLoader::FileLoader(TrackFileLoader::new(track.clone())),
             // "sensor_reader" => ,
-            "wave_generator" => TrackLoader::WaveGenerator(TrackWaveGenerator::new(track.clone(),track_input_port.clone(), track_out_port.clone())),
+            // "wave_generator" => TrackLoader::WaveGenerator(TrackWaveGenerator::new(track.clone(),track_input_port.clone(), track_out_port.clone())),
             _ => TrackLoader::None,
         }
     }

@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use user_interface::display::display::*;
 use rand::Rng;
 use core::core::*;
+use crate::core::track_loader::{TrackWaveGenerator, WaveGenerateType};
 
 struct LoopManager {
     loop_start_time: Instant,
@@ -22,6 +23,16 @@ impl LoopManager {
             display: Display::new(480, 480, 480 * 4,4),
             core: Core::new(6),
         }
+    }
+    
+    fn run_once_debug (&self) {
+        let mut wave_generator = TrackWaveGenerator::new(WaveGenerateType::Rectangular(0.5),10,10,30.0,);
+        wave_generator.generate_wave();
+        println!("{:?}", &wave_generator);
+        
+        let mut wave_generator_1 = TrackWaveGenerator::new(WaveGenerateType::Noise,10,20,30.0);
+        wave_generator_1.generate_wave();
+        println!("{:?}", &wave_generator_1);
     }
     
     fn loop_start(&mut self) {
@@ -68,5 +79,6 @@ impl LoopManager {
 
 fn main() {
     let mut loop_manager = LoopManager::new(30.0);
-    loop_manager.loop_main();
+    // loop_manager.loop_main();
+    loop_manager.run_once_debug();
 }
