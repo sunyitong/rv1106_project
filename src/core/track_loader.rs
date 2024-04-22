@@ -62,13 +62,19 @@ impl TrackSensorReader {
 
 #[derive(Clone)]
 pub struct TrackWaveGenerator{
+    linked_track_input_port: Rc<RefCell<i32>>,
     linked_track: Rc<RefCell<Vec<i32>>>,
+    linked_track_output_port: Rc<RefCell<i32>>,
 }
 
 impl TrackWaveGenerator {
-    pub fn new (linked_track: Rc<RefCell<Vec<i32>>>) -> Self {
+    pub fn new (linked_track: Rc<RefCell<Vec<i32>>>, 
+                linked_track_input_port: Rc<RefCell<i32>>, 
+                linked_track_output_port:Rc<RefCell<i32>>) -> Self {
         TrackWaveGenerator{
+            linked_track_input_port,
             linked_track,
+            linked_track_output_port,
         }
     }
 }

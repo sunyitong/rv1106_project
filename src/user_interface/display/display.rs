@@ -16,8 +16,6 @@ pub struct Display {
     line_byte_length: usize,
     bytes_per_pixel: usize,
     buffer: Vec<u8>,
-    frame_start_time: Instant,
-    frame_time: Duration,
     #[cfg(windows)]
     window_win:Window,
     #[cfg(windows)]
@@ -28,11 +26,9 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn new(width:usize, height:usize, line_byte_length:usize, bytes_per_pixel:usize, fps:f32) -> Self {
+    pub fn new(width:usize, height:usize, line_byte_length:usize, bytes_per_pixel:usize) -> Self {
         let buffer= vec![0u8; line_byte_length * height];
         let simulator_buffer = vec![0u32; width * height];
-        let frame_start_time = Instant::now();
-        let frame_time = Duration::from_secs_f32(1.0 / fps);
 
         Display {
             width,
@@ -40,8 +36,6 @@ impl Display {
             line_byte_length,
             bytes_per_pixel,
             buffer,
-            frame_start_time,
-            frame_time,
 
             #[cfg(windows)]
             window_win: Window::new(
@@ -62,7 +56,6 @@ impl Display {
     /// Frame starting
     ///
     pub fn frame_start (&mut self) {
-        self.frame_start_time = Instant::now();
         self.buffer.fill(0);
     }
 
@@ -412,10 +405,5 @@ impl Display {
 
         #[cfg(all(target_os = "linux", target_arch = "arm"))]
         self.window_linux.write_frame(&self.buffer);
-
-        // keeping fps
-        if let Some(remaining) = self.frame_time.checked_sub(self.frame_start_time.elapsed()) {
-            thread::sleep(remaining);
-        }
     }
 }

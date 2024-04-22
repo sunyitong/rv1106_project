@@ -14,21 +14,22 @@ impl DataLoaderContainer {
         }
     }
 
-    pub fn set_track_loader(&mut self, loader_index: usize, loader_type: &str, wave_container: &WaveContainer) {
+    pub fn set_track_loader(&mut self, 
+                            loader_index: usize, 
+                            loader_type: &str, 
+                            wave_container: &WaveContainer) {
         let loader = &mut self.track_loader[loader_index];
+        let track_input_port = &wave_container.data_input_port[loader_index];
         let track = &wave_container.wave_track[loader_index];
-        *loader = Self::create_loader(loader_type, track.clone());
-    }
-
-    pub fn create_loader(loader_type: &str, track: Rc<RefCell<Vec<i32>>>) -> TrackLoader {
-        match loader_type {
-            "file_loader" => TrackLoader::FileLoader(TrackFileLoader::new(track)),
+        let track_out_port = &wave_container.data_output_port[loader_index];
+        *loader = match loader_type {
+            "file_loader" => TrackLoader::FileLoader(TrackFileLoader::new(track.clone())),
             // "sensor_reader" => ,
-            // "wave_generator" => ,
-            _ => TrackLoader::FileLoader(TrackFileLoader::new(track)), // Default fallback
+            "wave_generator" => TrackLoader::WaveGenerator(TrackWaveGenerator::new(track.clone(),track_input_port.clone(), track_out_port.clone())),
+            _ => TrackLoader::None,
         }
     }
-
+    
     pub fn info (&self) {
         println!("Data Loader Container Info:");
         for (index, item) in self.track_loader.iter().enumerate() {

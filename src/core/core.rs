@@ -1,39 +1,33 @@
-use std::time::Instant;
+use std::thread;
+use std::time::{Instant, Duration};
 use crate::core::track_loader::*;
 use crate::core::data_loader_container::*;
 use crate::core::wave_container::*;
 use crate::core::operator_rack::*;
 use crate::core::data_output::*;
 
-struct Core {
+pub struct Core {
     track_number: usize,
     data_loader_container: DataLoaderContainer,
     wave_container: WaveContainer,
     operator_rack: OperatorRack,
-    data_output: DataOutput,
-    loop_start_time: Instant,
 }
 
 impl Core {
-    fn new (track_number:usize) -> Self {
+    pub fn new (track_number:usize) -> Self {
         Core {
             track_number,
             data_loader_container: DataLoaderContainer::new(track_number),
             wave_container: WaveContainer::new(track_number),
             operator_rack: OperatorRack::new(),
-            data_output: DataOutput::new(),
-            loop_start_time: Instant::now(),
         }
     }
 
-    fn core_loop (&self) {
-        todo!()
-        // loop start get instant time
+    pub fn core_loop (&mut self) {
         // loop track_loader from DataLoaderContainer
         // loop wave_track from WaveContainer
         // loop OperatorRack
         // loop DataOutput
-        // calculate duration to keep fps
     }
 
     fn set_track_loader (&mut self, loader_index:usize, loader_type:&str) {
