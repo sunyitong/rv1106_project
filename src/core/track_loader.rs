@@ -77,12 +77,13 @@ pub struct TrackWaveGenerator{
     // linked_track: Rc<RefCell<Vec<i32>>>,
     // linked_track_output_port: Rc<RefCell<i32>>,
     wave_type:WaveGenerateType,
-    amplitude:i32,
+    amplitude:f32,
     wavelength:usize,
     sample_rate: f32,
     phase: f32,
     duty: f32,
-    pub wave_date_buffer: Option<Vec<f32>>,
+    y_shift:i32,
+    pub wave_date_buffer: Vec<i32>,
 }
 
 impl TrackWaveGenerator {
@@ -92,24 +93,26 @@ impl TrackWaveGenerator {
     pub fn new (wave_type: WaveGenerateType,
                 amplitude:i32,
                 wavelength:usize,
-                sample_rate: f32,
+                sample_rate: u32,
                 ) -> Self {
+        
         TrackWaveGenerator{
             // linked_track_input_port,
             // linked_track,
             // linked_track_output_port,
             wave_type,
-            amplitude,
+            amplitude: amplitude as f32,
             wavelength,
-            sample_rate,
+            sample_rate: sample_rate as f32,
             phase: 0.0,
             duty: 0.5,
-            wave_date_buffer: None,
+            y_shift: 0,
+            wave_date_buffer: vec![0],
         }
     }
 
     pub fn generate_wave(&mut self) {
-        let mut wave: Vec<f32> = Vec::with_capacity(self.wavelength);
+        let mut wave: Vec<i32> = Vec::with_capacity(self.wavelength);
         for i in 0.. self.wavelength {
             let value = match self.wave_type{
                 WaveGenerateType::Rectangular(duty_cycle) => {
@@ -124,51 +127,92 @@ impl TrackWaveGenerator {
 
             wave.push(value);
         }
-        self.wave_date_buffer = Some(wave);
+        self.wave_date_buffer = wave;
     }
 
-    fn generate_sine_wave(&self, index: usize) -> f32 {
+    fn generate_sine_wave(&self, index: usize) -> i32 {
         let frequency = self.sample_rate / self.wavelength as f32;
-        let x = self.phase + 2.0 * PI * index as f32 * frequency;
-        x.sin()
+        let x = self.phase + 2.0 * PI * frequency * index as f32 / self.sample_rate;
+        self.wave_value_transform(x.sin())
     }
 
-    fn generate_triangle_wave(&self, index: usize) -> f32 {
+
+    fn generate_triangle_wave(&self, index: usize) -> i32 {
         let frequency = self.sample_rate / self.wavelength as f32;
-        let x = self.phase + 2.0 * index as f32 * frequency;
-        (2.0 * (x - 2.0 * (x / (2.0 * PI)).floor()).abs() / PI) - 1.0
+        let angular_frequency = 2.0 * PI * frequency;
+        let x = self.phase + angular_frequency * index as f32 / self.sample_rate;
+        
+        let x = x % (2.0 * PI);
+        
+        if x < PI {
+            self.wave_value_transform(2.0 * x / PI - 1.0)
+        } else {
+            self.wave_value_transform(1.0 - 2.0 * (x - PI) / PI)
+        }
     }
 
-    fn generate_sawtooth_wave(&self, index: usize) -> f32 {
+    fn generate_sawtooth_wave(&self, index: usize) -> i32 {
         let frequency = self.sample_rate / self.wavelength as f32;
-        let x = self.phase + index as f32 * frequency;
-        (2.0 * (x - (x / (2.0 * PI)).floor() * PI) / PI) - 1.0
+        let angular_frequency = 2.0 * PI * frequency;
+        let x = self.phase + angular_frequency * index as f32 / self.sample_rate;
+        self.wave_value_transform(2.0 * (x / (2.0 * PI) - (x / (2.0 * PI)).floor()) - 1.0)
     }
 
-    fn generate_noise(&self) -> f32 {
-        rand::thread_rng().gen_range(-1.0..1.0)
+    fn generate_noise(&self) -> i32 {
+        let x = rand::thread_rng().gen_range(-1.0..1.0);
+        self.wave_value_transform(x)
     }
 
-    fn generate_rectangular_wave(&self, index: usize, duty_cycle: f32) -> f32 {
+    fn generate_rectangular_wave(&self, index: usize, duty_cycle: f32) -> i32 {
         let period = self.wavelength;
         let duty_cycle_samples = (period as f32 * duty_cycle) as usize;
 
         if index % period < duty_cycle_samples {
-            1.0
+            self.wave_value_transform(1.0)
         } else {
-            -1.0
+            self.wave_value_transform(-1.0)
         }
     }
-
-    fn get_value_at_time(&self, time: usize) -> Option<i32> {
-        if let Some(wave_data) = &self.wave_date_buffer {
-            if time < wave_data.len() {
-                Some((wave_data[time] * self.amplitude as f32) as i32)
-            } else {
-                None
-            }
-        } else {
-            None
+    
+    fn wave_value_transform (&self, value: f32) -> i32 {
+        (value * self.amplitude).round() as i32 + self.y_shift
+    }
+    
+    pub fn set_amplitude(&mut self, amplitude:i32) {
+        self.amplitude = amplitude as f32;
+        self.generate_wave();
+    }
+    
+    pub fn set_wavelength(&mut self, wavelength:usize) {
+        self.wavelength = wavelength;
+        self.generate_wave();
+    }
+    
+    pub fn set_phase(&mut self, phase: i32) {
+        self.phase = phase as f32;
+        self.generate_wave();
+    }
+    
+    pub fn set_duty(&mut self, duty: f32) {
+        let mut duty = duty;
+        if duty < 0.0 {
+            duty = 0.0;
+        } else if duty > 1.0 {
+            duty = 1.0;
         }
+        self.duty = duty;
+        self.generate_wave();
+    }
+    
+    pub fn set_y_shift(&mut self, y_shift:i32) {
+        self.y_shift = y_shift;
+        self.generate_wave();
+        
+    }
+
+    pub fn get_wave_value(&self, time: usize) -> i32 {
+        let wave_data = &self.wave_date_buffer;
+        let time = time % wave_data.len();
+        wave_data[time]
     }
 }

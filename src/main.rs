@@ -26,13 +26,19 @@ impl LoopManager {
     }
     
     fn run_once_debug (&self) {
-        let mut wave_generator = TrackWaveGenerator::new(WaveGenerateType::Rectangular(0.5),10,10,30.0,);
-        wave_generator.generate_wave();
-        println!("{:?}", &wave_generator);
         
-        let mut wave_generator_1 = TrackWaveGenerator::new(WaveGenerateType::Noise,10,20,30.0);
+        let mut wave_generator_1 = TrackWaveGenerator::new(WaveGenerateType::Triangle,10,30,30);
         wave_generator_1.generate_wave();
         println!("{:?}", &wave_generator_1);
+        
+        let mut wave_generator_2 = TrackWaveGenerator::new(WaveGenerateType::Sawtooth, 10, 30,30);
+        wave_generator_2.generate_wave();
+        println!("{:?}", &wave_generator_2);
+        
+        
+        for i in 0..1000 {
+            println!("{:?}", wave_generator_2.get_wave_value(i));
+        }
     }
     
     fn loop_start(&mut self) {
