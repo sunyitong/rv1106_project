@@ -18,7 +18,7 @@ impl Core {
             track_number,
             data_loader_container: DataLoaderContainer::new(track_number),
             wave_container: WaveContainer::new(track_number),
-            operator_rack: OperatorRack::new(),
+            operator_rack: OperatorRack::new(track_number),
             data_output: DataOutput::new(),
         }
     }
@@ -30,8 +30,8 @@ impl Core {
         // loop DataOutput
     }
 
-    fn set_track_loader (&mut self, loader_index:usize, loader_type:&str) {
-        self.data_loader_container.set_track_loader(loader_index, loader_type, &self.wave_container);
+    fn set_track_loader (&mut self, loader_index:usize, loader_type:&str, wave_generate_type: WaveGenerateType) {
+        self.data_loader_container.set_track_loader(loader_index, loader_type, wave_generate_type, &self.wave_container);
     }
 
     fn read_track_from_file(&mut self, loader_index:usize, file_path:&str) {

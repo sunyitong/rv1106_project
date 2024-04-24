@@ -1,11 +1,14 @@
 mod user_interface;
 mod core;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
 use user_interface::display::display::*;
 use rand::Rng;
 use core::core::*;
+use crate::core::operator_rack::{OperatorAdd, OperatorRack, Port};
 use crate::core::track_loader::{TrackWaveGenerator, WaveGenerateType};
 
 struct LoopManager {
@@ -26,19 +29,76 @@ impl LoopManager {
     }
     
     fn run_once_debug (&self) {
+        // let mut fake_linked_track = Rc::new(RefCell::new(vec![0;30]));
+        // 
+        // let mut wave_generator_1 = TrackWaveGenerator::new(WaveGenerateType::Triangle, fake_linked_track.clone());
+        // wave_generator_1.generate_wave();
+        // println!("{:?}", &wave_generator_1);
+        // 
+        // let mut wave_generator_2 = TrackWaveGenerator::new(WaveGenerateType::Sawtooth, fake_linked_track.clone());
+        // wave_generator_2.generate_wave();
+        // println!("{:?}", &wave_generator_2);
+        // 
+        // 
+        // for i in 0..10 {
+        //     wave_generator_2.push_value_to_track(i);
+        //     println!("{:?}", fake_linked_track.borrow());
+        // }
+
+        let mut rack = OperatorRack::new(6);  // 创建包含6个端口的输入输出节点
+
+        // 添加四个加法节点
+        let add_node1 = Box::new(OperatorAdd::new());
+        let add_node2 = Box::new(OperatorAdd::new());
+        let add_node3 = Box::new(OperatorAdd::new());
+        let add_node4 = Box::new(OperatorAdd::new());
+        rack.add_node(2, add_node1);
+        rack.add_node(3, add_node2);
+        rack.add_node(4, add_node3);
+        rack.add_node(5, add_node4);
         
-        let mut wave_generator_1 = TrackWaveGenerator::new(WaveGenerateType::Triangle,10,30,30);
-        wave_generator_1.generate_wave();
-        println!("{:?}", &wave_generator_1);
-        
-        let mut wave_generator_2 = TrackWaveGenerator::new(WaveGenerateType::Sawtooth, 10, 30,30);
-        wave_generator_2.generate_wave();
-        println!("{:?}", &wave_generator_2);
-        
-        
-        for i in 0..1000 {
-            println!("{:?}", wave_generator_2.get_wave_value(i));
+        for i in 0..2 {
+            rack.connect(0, i, 2, i);
         }
+        
+        rack.connect(0,3,3,1);
+        rack.connect(2, 0, 3, 0);
+        
+        rack.connect(2, 0, 1, 1);
+        
+        rack.connect(3, 0, 1, 0);
+        
+        rack.connect(0, 0, 4, 0);
+        
+        rack.connect(4, 0, 5, 0);
+        
+        rack.connect(0, 4, 5, 1);
+        
+        rack.connect(5, 0, 1, 4);
+        
+        rack.connect(3,0,4,1);
+
+        // 设置输入值
+        if let Some(input_node) = rack.operators.get_mut(&0) {
+            for i in 0..6 {
+                if let Some(port) = input_node.get_output_port(&i) {
+                    *port.borrow_mut() = Port { value: ((i + 1) * 10) as i32 };  // 为每个端口设置值: 10, 20, ..., 60
+                }
+            }
+        }
+
+        // 执行计算
+        rack.compute();
+
+        // 打印节点的输出情况来验证复杂结构的正确性
+        for i in 0..6 {
+            if let Some(output_node) = rack.operators.get(&1) {
+                if let Some(port) = output_node.get_input_port(&i) {
+                    println!("OperatorOutput input port {}: {}", i, port.borrow().value);
+                }
+            }
+        }
+        
     }
     
     fn loop_start(&mut self) {

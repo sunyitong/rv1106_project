@@ -4,9 +4,7 @@ use std::fs::{OpenOptions};
 use std::io::{self, Write, BufWriter};
 
 pub struct WaveContainer {
-    pub data_input_port: Vec<Rc<RefCell<i32>>>,
     pub wave_track: Vec<Rc<RefCell<Vec<i32>>>>,
-    pub data_output_port: Vec<Rc<RefCell<i32>>>,
     track_selection: usize,
     recording_flag: Vec<bool>,
     pointer: usize,
@@ -18,13 +16,9 @@ pub struct WaveContainer {
 
 impl WaveContainer {
     pub fn new (track_number:usize) -> Self {
-        let data_input_port= (0..track_number).map(|_| Rc::new(RefCell::new(0))).collect::<Vec<_>>();
         let wave_track = (0..track_number).map(|_| Rc::new(RefCell::new(Vec::new()))).collect::<Vec<_>>();
-        let data_output_port = (0..track_number).map(|_| Rc::new(RefCell::new(0))).collect::<Vec<_>>();
         WaveContainer{
-            data_input_port,
             wave_track,
-            data_output_port,
             track_selection: 0,
             recording_flag: vec![false; track_number],
             pointer: 0,

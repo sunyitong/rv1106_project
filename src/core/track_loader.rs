@@ -50,14 +50,22 @@ impl TrackFileLoader {
 }
 
 #[derive(Clone)]
+pub enum Sensor {
+    Simulator,
+    None,
+}
+
+#[derive(Clone)]
 pub struct TrackSensorReader{
     linked_track: Rc<RefCell<Vec<i32>>>,
+    sensor: Sensor,
 }
 
 impl TrackSensorReader {
-    pub fn new (linked_track: Rc<RefCell<Vec<i32>>>) -> Self {
+    pub fn new (linked_track: Rc<RefCell<Vec<i32>>>, sensor: Sensor) -> Self {
         TrackSensorReader{
             linked_track,
+            sensor,
         }
     }
 }
@@ -73,9 +81,7 @@ pub enum WaveGenerateType {
 
 #[derive(Clone, Debug)]
 pub struct TrackWaveGenerator{
-    // linked_track_input_port: Rc<RefCell<i32>>,
-    // linked_track: Rc<RefCell<Vec<i32>>>,
-    // linked_track_output_port: Rc<RefCell<i32>>,
+    linked_track: Rc<RefCell<Vec<i32>>>,
     wave_type:WaveGenerateType,
     amplitude:f32,
     wavelength:usize,
@@ -83,30 +89,25 @@ pub struct TrackWaveGenerator{
     phase: f32,
     duty: f32,
     y_shift:i32,
+    is_push_data:bool,
     pub wave_date_buffer: Vec<i32>,
 }
 
 impl TrackWaveGenerator {
-    // linked_track: Rc<RefCell<Vec<i32>>>,
-    // linked_track_input_port: Rc<RefCell<i32>>,
-    // linked_track_output_port:Rc<RefCell<i32>>
     pub fn new (wave_type: WaveGenerateType,
-                amplitude:i32,
-                wavelength:usize,
-                sample_rate: u32,
+                linked_track: Rc<RefCell<Vec<i32>>>,
                 ) -> Self {
         
         TrackWaveGenerator{
-            // linked_track_input_port,
-            // linked_track,
-            // linked_track_output_port,
+            linked_track,
             wave_type,
-            amplitude: amplitude as f32,
-            wavelength,
-            sample_rate: sample_rate as f32,
+            amplitude: 10.0,
+            wavelength: 30,
+            sample_rate: 30.0,
             phase: 0.0,
             duty: 0.5,
             y_shift: 0,
+            is_push_data:false,
             wave_date_buffer: vec![0],
         }
     }
@@ -214,5 +215,10 @@ impl TrackWaveGenerator {
         let wave_data = &self.wave_date_buffer;
         let time = time % wave_data.len();
         wave_data[time]
+    }
+    
+    pub fn push_value_to_track(&mut self, time:usize) {
+        let mut linked_track = self.linked_track.borrow_mut();
+        linked_track[time] = self.get_wave_value(time);
     }
 }
