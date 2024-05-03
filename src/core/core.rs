@@ -25,12 +25,14 @@ impl Core {
 
     pub fn core_loop (&mut self) {
         // loop track_loader from DataLoaderContainer
+        self.data_loader_container.loop_update_track_loader_container(5);
         // loop wave_track from WaveContainer
         // loop OperatorRack
         // loop DataOutput
     }
+    
 
-    fn set_track_loader (&mut self, loader_index:usize, loader_type:&str, wave_generate_type: WaveGenerateType) {
+    pub fn set_track_loader (&mut self, loader_index:usize, loader_type:&str, wave_generate_type: WaveGenerateType) {
         self.data_loader_container.set_track_loader(loader_index, loader_type, wave_generate_type, &self.wave_container);
     }
 

@@ -10,12 +10,19 @@ use rand::Rng;
 use core::core::*;
 use crate::core::operator_rack::{OperatorAdd, OperatorRack, Port};
 use crate::core::track_loader::{TrackWaveGenerator, WaveGenerateType};
+use crate::user_interface::interaction::key_manager::*;
+
+use std::env;
+use std::path::PathBuf;
+use device_query::Keycode::K;
+use crate::core::track_loader::WaveGenerateType::Noise;
 
 struct LoopManager {
     loop_start_time: Instant,
     fps: Duration,
     display:Display,
     core: Core,
+    key_manager: KeyManager,
 }
 
 impl LoopManager {
@@ -25,7 +32,11 @@ impl LoopManager {
             fps: Duration::from_secs_f32(1.0 / fps),
             display: Display::new(480, 480, 480 * 4,4),
             core: Core::new(6),
+            key_manager: KeyManager::new(),
         }
+    }
+    fn init(&mut self) {
+        self.core.set_track_loader(0,"wave_generator", Noise);
     }
     
     fn run_once_debug (&self) {
@@ -107,30 +118,36 @@ impl LoopManager {
     }
     
     fn loop_main(&mut self) {
-        let mut flag= 0;
+        // let mut flag= 0;
         loop {
             // start loop
             self.loop_start();
+            self.key_manager.get_keys();
 
             self.core.core_loop();
 
-            // main loop
-            self.display.draw_line(10,10,400,300,(255,0,0));
-            self.display.draw_rectangle(30, 40, 200, 100, (255,0,0),true);
-            self.display.draw_rectangle(50, 60, 180, 90, (0,150,0),false);
-            self.display.set_pixel_color(100, 100, (0,0,255));
-            self.display.draw_circle(200,200,30,(0,0,255,),true);
-            self.display.draw_rectangle_rounded(300,20,400,400,40,(255,255,255),true);
-            self.display.text("Hello World !",1,0,0, 2,2,(255,0,0));
-            self.display.text("@ Test ",2,10,100,2,10,(255,255,255));
-            self.display.image("icon.png", flag, flag);
-            flag += 1;
-            if flag == 400 {
-                flag = 0;
-            }
+            // let path = env::current_exe().unwrap();
+            // let folder_path = path.parent().unwrap();
+            // let mut resource_path = PathBuf::from(folder_path);
+            // resource_path.push("dip.png");
+            // 
+            // // main loop
+            // self.display.draw_line(10,10,400,300,(255,0,0));
+            // self.display.draw_rectangle(30, 40, 200, 100, (255,0,0),true);
+            // self.display.draw_rectangle(50, 60, 180, 90, (0,150,0),false);
+            // self.display.set_pixel_color(100, 100, (0,0,255));
+            // self.display.draw_circle(200,200,30,(0,0,255,),true);
+            // self.display.draw_rectangle_rounded(300,20,400,400,40,(255,255,255),true);
+            // self.display.text("Hello World !",1,0,0, 2,2,(255,0,0));
+            // self.display.text("@ Test ",2,10,100,2,10,(255,255,255));
+            // self.display.image(resource_path, 0, 0);
+            // flag += 1;
+            // if flag == 400 {
+            //     flag = 0;
+            // }
             
             // end loop
-            self.loop_end()
+            self.loop_end();
         }
     }
     
@@ -144,7 +161,8 @@ impl LoopManager {
 }
 
 fn main() {
-    let mut loop_manager = LoopManager::new(30.0);
-    // loop_manager.loop_main();
-    loop_manager.run_once_debug();
+    let mut loop_manager = LoopManager::new(2.0);
+    loop_manager.init();
+    loop_manager.loop_main();
+    // loop_manager.run_once_debug();
 }

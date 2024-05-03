@@ -16,12 +16,14 @@ pub enum TrackLoader {
 #[derive(Clone)]
 pub struct TrackFileLoader {
     linked_track: Rc<RefCell<Vec<i32>>>,
+    is_load: bool,
 }
 
 impl TrackFileLoader {
     pub fn new (linked_track: Rc<RefCell<Vec<i32>>>) -> Self {
         TrackFileLoader{
             linked_track,
+            is_load:false
         }
     }
 
@@ -45,6 +47,7 @@ impl TrackFileLoader {
             data.push(value);
         }
         *self.linked_track.borrow_mut() = data;
+        self.is_load = true;
         Ok(())
     }
 }

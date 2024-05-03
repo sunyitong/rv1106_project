@@ -1,6 +1,7 @@
 use crate::user_interface::display::font::{font_pixel_operator_16, font_dot_digital_20};
 use image::GenericImageView;
 use image::io::Reader as ImageReader;
+use std::path::Path;
 
 #[cfg(windows)]
 use minifb::{Window, WindowOptions};
@@ -353,7 +354,7 @@ impl Display {
         }
     }
 
-    pub fn image(&mut self, img_path:&str, start_x:usize, start_y:usize) {
+    pub fn image<P: AsRef<Path>>(&mut self, img_path:P, start_x:usize, start_y:usize) {
         let img = ImageReader::open(img_path).unwrap().decode().unwrap();
         let (img_width, img_height) = img.dimensions();
 

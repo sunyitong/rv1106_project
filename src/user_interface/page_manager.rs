@@ -35,11 +35,11 @@ impl PageManager {
     }
 }
 
-struct PageDataloader {
+struct PageDataLoader {
     
 }
 
-impl PageBehavior for PageDataloader {
+impl PageBehavior for PageDataLoader {
     fn render(&self) {
         todo!()
     }
