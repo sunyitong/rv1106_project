@@ -55,7 +55,7 @@ impl Display {
     /// Frame starting
     ///
     pub fn frame_start (&mut self) {
-        self.buffer.fill(0);
+        // self.buffer.fill(0);
     }
 
     ///

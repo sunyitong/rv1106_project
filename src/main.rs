@@ -168,7 +168,7 @@ fn main() {
     // loop_manager.loop_main();
     // loop_manager.run_once_debug();
     
-    let mut view_container = ViewContainer::new(1.0, 6);
+    let mut view_container = ViewContainer::new(30.0, 6);
     view_container.page_0.select_data_loader(0,Box::new(FileLoaderUiBlock::new()));
     view_container.frame_init();
     loop{
