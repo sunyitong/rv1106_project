@@ -3,7 +3,7 @@ use device_query::{DeviceQuery, DeviceState, Keycode};
 
 pub struct KeyManager {
     device_state: DeviceState,
-    keys: Vec<Keycode>,
+    pub keys: Vec<Keycode>,
 }
 
 impl KeyManager {
@@ -15,12 +15,7 @@ impl KeyManager {
     }
     
     pub fn get_keys (&mut self) {
-        let new_keys = self.device_state.get_keys();
-        
-        if !new_keys.is_empty() {
-            self.keys = new_keys;
-            println!("{:?}", self.keys);
-        }
+        self.keys = self.device_state.get_keys();
     }
 }
 

@@ -17,6 +17,7 @@ use std::env;
 use std::path::PathBuf;
 use device_query::Keycode::K;
 use crate::model::track_loader::WaveGenerateType::Noise;
+use crate::view::view_main::{FileLoaderUiBlock, ViewContainer};
 
 struct LoopManager {
     loop_start_time: Instant,
@@ -167,4 +168,12 @@ fn main() {
     // loop_manager.loop_main();
     // loop_manager.run_once_debug();
     
+    let mut view_container = ViewContainer::new(1.0, 6);
+    view_container.page_0.select_data_loader(0,Box::new(FileLoaderUiBlock::new()));
+    view_container.frame_init();
+    loop{
+        view_container.frame_start();
+        view_container.frame_main();
+        view_container.frame_end();
+    }
 }
