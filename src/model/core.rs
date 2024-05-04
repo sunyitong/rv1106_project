@@ -1,15 +1,15 @@
-use crate::core::track_loader::*;
-use crate::core::data_loader_container::*;
-use crate::core::wave_container::*;
-use crate::core::operator_rack::*;
-use crate::core::data_output::*;
+use crate::model::track_loader::*;
+use crate::model::data_loader_container::*;
+use crate::model::wave_container::*;
+use crate::model::operator_rack::*;
+use crate::model::data_output::*;
 
 pub struct Core {
     track_number: usize,
-    data_loader_container: DataLoaderContainer,
-    wave_container: WaveContainer,
-    operator_rack: OperatorRack,
-    data_output: DataOutput,
+    pub data_loader_container: DataLoaderContainer,
+    pub wave_container: WaveContainer,
+    pub operator_rack: OperatorRack,
+    pub data_output: DataOutput,
 }
 
 impl Core {

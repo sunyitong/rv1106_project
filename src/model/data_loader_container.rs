@@ -1,5 +1,5 @@
-use crate::core::track_loader::*;
-use crate::core::wave_container::*;
+use crate::model::track_loader::*;
+use crate::model::wave_container::*;
 
 pub struct DataLoaderContainer {
     pub track_loader: Vec<TrackLoader>,

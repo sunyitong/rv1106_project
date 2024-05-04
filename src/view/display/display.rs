@@ -1,4 +1,4 @@
-use crate::user_interface::display::font::{font_pixel_operator_16, font_dot_digital_20};
+use crate::view::display::font::{font_pixel_operator_16, font_dot_digital_20};
 use image::GenericImageView;
 use image::io::Reader as ImageReader;
 use std::path::Path;

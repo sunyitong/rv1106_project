@@ -1,21 +1,22 @@
-mod user_interface;
-mod core;
+mod view;
+mod model;
+mod controller;
 
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
-use user_interface::display::display::*;
+use view::display::display::*;
 use rand::Rng;
-use core::core::*;
-use crate::core::operator_rack::{OperatorAdd, OperatorRack, Port};
-use crate::core::track_loader::{TrackWaveGenerator, WaveGenerateType};
-use crate::user_interface::interaction::key_manager::*;
+use model::core::*;
+use crate::model::operator_rack::{OperatorAdd, OperatorRack, Port};
+use crate::model::track_loader::{TrackWaveGenerator, WaveGenerateType};
+use crate::view::interaction::key_manager::*;
 
 use std::env;
 use std::path::PathBuf;
 use device_query::Keycode::K;
-use crate::core::track_loader::WaveGenerateType::Noise;
+use crate::model::track_loader::WaveGenerateType::Noise;
 
 struct LoopManager {
     loop_start_time: Instant,
@@ -161,8 +162,9 @@ impl LoopManager {
 }
 
 fn main() {
-    let mut loop_manager = LoopManager::new(2.0);
-    loop_manager.init();
-    loop_manager.loop_main();
+    // let mut loop_manager = LoopManager::new(2.0);
+    // loop_manager.init();
+    // loop_manager.loop_main();
     // loop_manager.run_once_debug();
+    
 }
