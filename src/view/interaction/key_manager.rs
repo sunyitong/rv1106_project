@@ -43,6 +43,10 @@ impl KeyManager {
             Keycode::Left => "Left".to_string(),
             Keycode::Right => "Right".to_string(),
             Keycode::M => "M".to_string(),
+            Keycode::Key1 => "1".to_string(),
+            Keycode::Key2 => "2".to_string(),
+            Keycode::Key3 => "3".to_string(),
+            Keycode::Key4 => "4".to_string(),
             _ => "".to_string(),  // Ignore other keys
         }
     }

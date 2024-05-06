@@ -13,7 +13,9 @@ pub struct ViewContainer {
     fps: Duration,
     display:Rc<RefCell<Display>>,
     page_0: Page0DataLoader,
-    page_index: usize,
+    page_1: Page1WaveEditor,
+    page_index: Rc<RefCell<usize>>,
+    page_index_prvious: usize,
     key_manager: Rc<RefCell<KeyManager>>,
 }
 
@@ -22,20 +24,25 @@ impl ViewContainer {
         let display = Rc::new(RefCell::new(Display::new(480, 480, 480 * 4,4)));
         let display_ref = display.clone();
         let key_manager = Rc::new(RefCell::new(KeyManager::new()));
-        let page_0 = Page0DataLoader::new(track_number, display_ref.clone(), key_manager.clone());
+        let page_index = Rc::new(RefCell::new(0));
+        let page_0 = Page0DataLoader::new(track_number, display_ref.clone(), key_manager.clone(), page_index.clone());
+        let page_1 = Page1WaveEditor::new(track_number, display_ref.clone(), key_manager.clone(), page_index.clone());
 
         ViewContainer{
             loop_start_time: Instant::now(),
             fps: Duration::from_secs_f32(1.0 / fps),
             display,
             page_0,
+            page_1,
             key_manager,
-            page_index: 0,
+            page_index,
+            page_index_prvious: 0,
         }
     }
 
     pub fn frame_init (&mut self) {
         self.page_0.page_view_init();
+        self.page_1.page_view_init();
     }
 
     pub fn frame_start (&mut self) {
@@ -45,9 +52,27 @@ impl ViewContainer {
 
     pub fn frame_main (&mut self) {
 
-        match self.page_index {
+        let current_page_index = *self.page_index.borrow();
+
+        if current_page_index != self.page_index_prvious {
+            match current_page_index {
+                0 => {
+                    self.page_0.page_view_back();
+                },
+                1 => {
+                    self.page_1.page_view_back();
+                },
+                _ => {todo!()},
+            }
+            self.page_index_prvious = current_page_index;
+        }
+
+        match current_page_index {
             0 => {
                 self.page_0.page_view_update();
+            },
+            1 => {
+                self.page_1.page_view_update();
             },
             _ => {todo!()},
         }
@@ -59,19 +84,21 @@ impl ViewContainer {
             // info!("{:?}", remaining);
             thread::sleep(remaining);
         } else {
-            debug!("Rendering Over Time")
+            // debug!("Rendering Over Time")
         }
     }
 }
 
 pub trait PageInterface {
     fn page_view_init(&mut self);
+    fn page_view_back(&mut self);
     fn process_key_input(&mut self);
     fn process_key_input_block_menu(&mut self);
     fn navigate_vertical(&mut self, dir: isize);
     fn navigate_horizontal(&mut self, dir: isize);
     fn call_block_menu(&mut self);
     fn call_page(&mut self);
+    fn update_page_index(&mut self, index: usize);
     fn page_view_update(&mut self);
 }
 
@@ -85,10 +112,11 @@ pub struct Page0DataLoader {
     focus_rect:[usize; 2],
     key_manager: Rc<RefCell<KeyManager>>,
     block_menu_called: bool,
+    page_index_ref: Rc<RefCell<usize>>,
 }
 
 impl Page0DataLoader {
-    fn new(track_number: usize, display_ref: Rc<RefCell<Display>>, key_manager: Rc<RefCell<KeyManager>>) -> Self {
+    fn new(track_number: usize, display_ref: Rc<RefCell<Display>>, key_manager: Rc<RefCell<KeyManager>>, page_index_ref:Rc<RefCell<usize>>) -> Self {
         let display_ui_block_ref = display_ref.clone();
         let mut block_coordinates = Vec::new();
         let mut data_loader_block_coordinates = Vec::new();
@@ -114,6 +142,7 @@ impl Page0DataLoader {
             focus_rect: [0, 0],
             key_manager,
             block_menu_called: false,
+            page_index_ref,
         }
     }
 
@@ -122,9 +151,18 @@ impl Page0DataLoader {
     }
 }
 
+
 impl PageInterface for Page0DataLoader {
     fn page_view_init(&mut self) {
         self.data_loader_blocks[0].set_selected(true);
+        for i in 0..self.track_number {
+            self.data_loader_blocks[i].block_view_update();
+            self.wave_preview_blocks[i].block_view_update();
+        }
+    }
+
+    fn page_view_back(&mut self) {
+        self.display_ref.borrow_mut().clean();
         for i in 0..self.track_number {
             self.data_loader_blocks[i].block_view_update();
             self.wave_preview_blocks[i].block_view_update();
@@ -140,6 +178,7 @@ impl PageInterface for Page0DataLoader {
                 "Down" => self.navigate_vertical(1),
                 "Left" => self.navigate_horizontal(-1),
                 "Right" => self.navigate_horizontal(1),
+                "2" => self.update_page_index(1),
                 "M" => self.block_menu_called = true,
                 _ => {},
             }
@@ -209,13 +248,16 @@ impl PageInterface for Page0DataLoader {
         self.block_menu_called = false
     }
 
+    fn update_page_index(&mut self, index:usize){
+        *self.page_index_ref.borrow_mut() = index;
+    }
+
     fn page_view_update(&mut self) {
 
-        // block menu call
         if self.block_menu_called {
             self.call_block_menu();
             self.process_key_input_block_menu();
-            
+
         } else {
             let selected_block_index = self.focus_rect;
             self.process_key_input();
@@ -355,7 +397,7 @@ impl EmptyBlockMenu {
             selected_index: 0,
         }
     }
-    
+
     fn execute(&self) {
         debug!("Menu Executed: {}", self.items[self.selected_index]);
     }
@@ -439,26 +481,63 @@ pub trait UiWaveEditorInterface {
 pub struct Page1WaveEditor {
     display_ref: Rc<RefCell<Display>>,
     track_number:usize,
-    wave_edit_blocks: Vec<Box<dyn UiWaveEditorInterface>>,
-    block_coordinates: Vec<Vec<[usize;2]>>,
-    focus_rect:[usize; 2],
+    wave_edit_blocks: Vec<Box<dyn WaveEditorUiBlockInterface>>,
+    wave_preview_block_coordinates: Vec<[usize;2]>,
+    focus_rect:usize,
     key_manager: Rc<RefCell<KeyManager>>,
     block_menu_called: bool,
+    page_index_ref: Rc<RefCell<usize>>,
 }
 
 impl Page1WaveEditor {
-    fn new(track_number: usize, display_ref: Rc<RefCell<Display>>, key_manager: Rc<RefCell<KeyManager>>) -> Self {
-        todo!()
+    fn new(track_number: usize, display_ref: Rc<RefCell<Display>>, key_manager: Rc<RefCell<KeyManager>>, page_index_ref:Rc<RefCell<usize>>) -> Self {
+        let display_ui_block_ref = display_ref.clone();
+        let gap_height = 480 / track_number;
+        let mut wave_preview_block_coordinates = Vec::new();
+        for i in 0..track_number {
+            wave_preview_block_coordinates.push([10, gap_height * i]);
+        }
+
+        Page1WaveEditor{
+            display_ref,
+            track_number,
+            wave_edit_blocks: (0..track_number).map(|i| Box::new(WaveEditorUiBlock::new(display_ui_block_ref.clone(), wave_preview_block_coordinates[i])) as Box<dyn WaveEditorUiBlockInterface>).collect(),
+            wave_preview_block_coordinates,
+            focus_rect: 0,
+            key_manager,
+            block_menu_called: false,
+            page_index_ref,
+        }
     }
 }
 
 impl PageInterface for Page1WaveEditor {
     fn page_view_init(&mut self) {
-        todo!()
+        // self.display_ref.borrow_mut().clean();
+        // // display.text("Page 1 Wave Editor", 1, 10, 10, 2, 8, (255,255,255));
+        // for i in 0..self.track_number {
+        //     self.wave_edit_blocks[i].block_view_update();
+        // }
+        self.wave_edit_blocks[0].set_selected(true);
+    }
+
+    fn page_view_back(&mut self) {
+        self.display_ref.borrow_mut().clean();
+        // display.text("Page 1 Wave Editor", 1, 10, 10, 2, 8, (255,255,255));
+        for i in 0..self.track_number {
+            self.wave_edit_blocks[i].block_view_update();
+        }
     }
 
     fn process_key_input(&mut self) {
-        todo!()
+        let key = self.key_manager.borrow_mut().check_keys();
+        if let Some(first_key) = key.get(0) {
+            debug!("{:?}", first_key);
+            match first_key.as_str() {
+                "1" => self.update_page_index(0),
+                _ => {},
+            }
+        }
     }
 
     fn process_key_input_block_menu(&mut self) {
@@ -481,9 +560,20 @@ impl PageInterface for Page1WaveEditor {
         todo!()
     }
 
-    fn page_view_update(&mut self) {
-        todo!()
+    fn update_page_index(&mut self, index:usize){
+        *self.page_index_ref.borrow_mut() = index;
+        debug!("Page Index Updated: {}", index);
     }
+
+    fn page_view_update(&mut self) {
+        self.process_key_input();
+    }
+}
+
+
+trait WaveEditorUiBlockInterface {
+    fn block_view_update(&mut self);
+    fn set_selected(&mut self, is_selected: bool);
 }
 
 struct WaveEditorUiBlock {
@@ -506,8 +596,35 @@ impl WaveEditorUiBlock {
             coordinate,
             coordinate_shift_x: 10,
             coordinate_shift_y: 10,
-            block_ui_width: 80,
+            block_ui_width: 150,
             block_ui_height: 50,
         }
+    }
+}
+
+impl WaveEditorUiBlockInterface for WaveEditorUiBlock {
+    fn block_view_update(&mut self) {
+        let mut color = (30,30,30);
+        if self.is_selected {
+            color = (100,30,30);
+        }
+
+        let mut display = self.display_ref.borrow_mut();
+
+        display.draw_rectangle(self.coordinate[0]+self.coordinate_shift_x,
+                               self.coordinate[1]+self.coordinate_shift_y,
+                               self.coordinate[0]+self.block_ui_width+self.coordinate_shift_x,
+                               self.coordinate[1]+self.block_ui_height+self.coordinate_shift_y,
+                               color,
+                               true);
+        display.text(&self.wave_editor_block_name, 1,
+                     self.coordinate[0]+self.coordinate_shift_x+5,
+                     self.coordinate[1]+self.coordinate_shift_y+5,
+                     1, 1, (0, 255, 0));
+
+    }
+
+    fn set_selected(&mut self, is_selected:bool) {
+        self.is_selected = is_selected;
     }
 }
