@@ -21,7 +21,7 @@ impl ViewContainer {
     pub fn new(fps:f32, track_number:usize) -> Self {
         let display = Rc::new(RefCell::new(Display::new(480, 480, 480 * 4,4)));
         let display_ref = display.clone();
-        let key_manager = Rc::new(RefCell::new(KeyManager::new(10.0)));
+        let key_manager = Rc::new(RefCell::new(KeyManager::new()));
         let page_0 = Box::new(Page0DataLoader::new(track_number, display_ref.clone(), key_manager.clone())) as Box<dyn PageInterface>;
 
         ViewContainer{
@@ -59,7 +59,7 @@ impl ViewContainer {
     pub fn frame_end (&mut self) {
         self.display.borrow_mut().frame_update();
         if let Some(remaining) = self.fps.checked_sub(self.loop_start_time.elapsed()) {
-            println!("{:?}", remaining);
+            // println!("{:?}", remaining);
             thread::sleep(remaining);
         } else {
             println!("Rendering Over Time")
@@ -130,17 +130,17 @@ impl PageInterface for Page0DataLoader {
     }
 
     fn process_key_input(&mut self) {
-        let key = {
-            let mut key_manager_ref = self.key_manager.borrow_mut();
-            key_manager_ref.get_key()
-        };
-        println!("{:?}", key);
-        match key.as_str() {
-            "Up" => self.navigate_vertical(-1),
-            "Down" => self.navigate_vertical(1),
-            "Left" => self.navigate_horizontal(-1),
-            "Right" => self.navigate_horizontal(1),
-            _ => {},
+        // 直接在这个作用域内处理键盘输入
+        let key = self.key_manager.borrow_mut().check_keys();
+        if let Some(first_key) = key.get(0) {
+            println!("{:?}", first_key);
+            match first_key.as_str() {
+                "Up" => self.navigate_vertical(-1),
+                "Down" => self.navigate_vertical(1),
+                "Left" => self.navigate_horizontal(-1),
+                "Right" => self.navigate_horizontal(1),
+                _ => {},
+            }
         }
     }
 
@@ -148,7 +148,7 @@ impl PageInterface for Page0DataLoader {
         let new_index = self.focus_rect[1] as isize + dir;
         if new_index >= 0 && new_index < self.data_loader_blocks.len() as isize {
             self.focus_rect[1] = new_index as usize;
-            println!("Vertical navigation: {}", dir);
+            // println!("Vertical navigation: {}", dir);
         }
     }
 
@@ -156,14 +156,14 @@ impl PageInterface for Page0DataLoader {
         let new_index = self.focus_rect[0] as isize + dir;
         if new_index >= 0 && new_index < 2 {
             self.focus_rect[0] = new_index as usize;
-            println!("Horizontal navigation: {}", dir);
+            // println!("Horizontal navigation: {}", dir);
         }
     }
 
     fn page_view_update(&mut self) {
         let selected_block_index = self.focus_rect;
         self.process_key_input();
-        println!("{:?}", self.focus_rect);
+        // println!("{:?}", self.focus_rect);
 
         let new_selected_block_index = self.focus_rect;
 
@@ -174,7 +174,7 @@ impl PageInterface for Page0DataLoader {
                 self.data_loader_blocks[new_selected_block_index[1]].set_selected(true);
             } else {
                 self.wave_preview_blocks[new_selected_block_index[1]].set_selected(true);
-                println!("Wave Preview Selected");
+                // println!("Wave Preview Selected");
             }
 
             for i in 0..self.track_number {
@@ -227,7 +227,7 @@ impl UiBlockInterface for EmptyLoaderUiBlock {
             color = (100,30,30);
         }
         let mut display = self.display_ref.borrow_mut();
-        println!("{:?}", self.coordinate);
+        // println!("{:?}", self.coordinate);
         display.draw_rectangle(self.coordinate[0]+self.coordinate_shift_x,
                                self.coordinate[1]+self.coordinate_shift_y,
                                self.coordinate[0]+self.block_ui_width+self.coordinate_shift_x,
@@ -318,7 +318,7 @@ impl UiBlockInterface for WavePreviewUiBlock {
             color = (100,30,30);
         }
         let mut display = self.display_ref.borrow_mut();
-        println!("{:?}", self.coordinate);
+        // println!("{:?}", self.coordinate);
         display.draw_rectangle(self.coordinate[0]+self.coordinate_shift_x,
                                self.coordinate[1]+self.coordinate_shift_y,
                                self.coordinate[0]+self.block_ui_width+self.coordinate_shift_x,
