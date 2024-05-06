@@ -18,12 +18,11 @@ use std::env;
 use std::path::PathBuf;
 use crate::model::track_loader::WaveGenerateType::Noise;
 use crate::view::view_main::{ViewContainer};
+use log::{info};
 
 fn main() {
-    // let mut loop_manager = LoopManager::new(2.0);
-    // loop_manager.init();
-    // loop_manager.loop_main();
-    // loop_manager.run_once_debug();
+    env_logger::init();
+    info!("starting up info");
     
     let mut view_container = ViewContainer::new(30.0, 4);
     view_container.frame_init();
