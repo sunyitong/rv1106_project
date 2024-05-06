@@ -21,7 +21,7 @@ impl ViewContainer {
     pub fn new(fps:f32, track_number:usize) -> Self {
         let display = Rc::new(RefCell::new(Display::new(480, 480, 480 * 4,4)));
         let display_ref = display.clone();
-        let key_manager = Rc::new(RefCell::new(KeyManager::new(1.0)));
+        let key_manager = Rc::new(RefCell::new(KeyManager::new(10.0)));
         let page_0 = Box::new(Page0DataLoader::new(track_number, display_ref.clone(), key_manager.clone())) as Box<dyn PageInterface>;
 
         ViewContainer{
@@ -119,7 +119,7 @@ impl Page0DataLoader {
         self.data_loader_blocks[index] = data_loader;
     }
 }
-    
+
 impl PageInterface for Page0DataLoader {
     fn page_view_init(&mut self) {
         self.data_loader_blocks[0].set_selected(true);
@@ -176,7 +176,7 @@ impl PageInterface for Page0DataLoader {
                 self.wave_preview_blocks[new_selected_block_index[1]].set_selected(true);
                 println!("Wave Preview Selected");
             }
-            
+
             for i in 0..self.track_number {
                 self.data_loader_blocks[i].block_view_update();
                 self.wave_preview_blocks[i].block_view_update();
@@ -215,7 +215,7 @@ impl EmptyLoaderUiBlock {
             coordinate_shift_y: 10,
             block_ui_width: 80,
             block_ui_height: 50,
-            
+
         }
     }
 }
@@ -258,7 +258,7 @@ impl UiBlockInterface for EmptyLoaderUiBlock {
 //     data_loader_name: String,
 //     is_selected: bool,
 // }
-// 
+//
 // impl FileLoaderUiBlock {
 //     pub fn new (display_ref:Rc<RefCell<Display>>) -> Self {
 //         FileLoaderUiBlock{
@@ -268,16 +268,16 @@ impl UiBlockInterface for EmptyLoaderUiBlock {
 //         }
 //     }
 // }
-// 
+//
 // impl UiBlockInterface for FileLoaderUiBlock {
 //     fn block_view_init(&mut self) {
 //         todo!()
 //     }
-// 
+//
 //     fn call_menu(&mut self) {
 //         todo!()
 //     }
-// 
+//
 //     fn get_block_name(&self) -> String {
 //         self.data_loader_name.clone()
 //     }

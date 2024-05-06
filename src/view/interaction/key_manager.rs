@@ -7,7 +7,7 @@ pub struct KeyManager {
     keys: Vec<Keycode>,
     last_key_check: Instant,
     fps: Duration,
-    
+
 }
 
 impl KeyManager {
@@ -19,7 +19,7 @@ impl KeyManager {
             fps: Duration::from_secs_f32(1.0 / fps),
         }
     }
-    
+
     pub fn get_key(&mut self) -> String {
         if self.last_key_check.elapsed() >= self.fps {
             self.last_key_check = Instant::now();
